@@ -1,11 +1,20 @@
 const express = require('express')
+
 const fs = require('fs');
 const router = express.Router();
 const client = require('../model/connection');
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
+const customizeMess = require('./mailServices')
+
+
+
+
+
+
+
 router.post("/submit-product", upload.array("images[]"), async (req, res) => {
-  console.log(req)
+ 
     const files = req.files;
     const data = JSON.parse(req.body.product)
     console.log(data)
@@ -95,7 +104,7 @@ router.post("/submit-product", upload.array("images[]"), async (req, res) => {
       `);
       const products = [];
       let currentProduct;
- console.log(rows);
+
       rows.forEach((row) => {
         if (!currentProduct || currentProduct.id !== row.product_id) {
           
@@ -167,10 +176,10 @@ router.post("/submit-product", upload.array("images[]"), async (req, res) => {
             
             
           });
-         console.log(currentProduct)
+      
         }
       });
-      console.log(products)
+     
       res.json(products);
     } catch (err) {
       console.error(err);
@@ -256,20 +265,26 @@ WHERE cart_info.email='${email}';
   
   router.post('/checkout',(req,res)=>{
     console.log(req.body)
-   
+    
+
+
     const { cartInfo,address } = req.body;
     console.log(cartInfo.length)
+    const product_name=[]
+    const email1 = cartInfo[0].email
     for(let i = 0; i<cartInfo.length;i++){
       const product_id= cartInfo[i].product_id
       const email = cartInfo[i].email
       const quantity = cartInfo[i].quantity
       const price_paid = cartInfo[i].amount
 
+
       client.query(`SELECT * FROM products WHERE id='${product_id}'`,(error,results)=>{
         if(error){
           throw error;
         }else{
           console.log(results.rows[0].qunatity>=quantity)
+          product_name.push(results.rows[0].name)
           if(results.rows[0].qunatity>=quantity){
             const newOne = results.rows[0].qunatity - quantity;
             console.log(quantity)
@@ -290,10 +305,12 @@ WHERE cart_info.email='${email}';
           if(error){
             throw error
           }
-          console.log(results)
+          
         })
-        console.log(result.rows)
-       res.send("Product is sold to you");
+
+      
+        
+       
       
       });
                 
@@ -305,8 +322,8 @@ WHERE cart_info.email='${email}';
         }
       })
     }
-
-    
+    customizeMess(cartInfo,email1)
+    res.send("product is sold")
    
 
   
@@ -371,7 +388,8 @@ WHERE sales_info.email='${email}';
       if(error){
         throw error;
       } 
-      console.log(results.rows)
+ 
+    
       res.status(200).json(results.rows);    })}
       else{
         client.query(`

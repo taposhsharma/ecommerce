@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router();
 const client = require('../model/connection');
+const customizeUser = require('./userMail')
 
 
 router.post('/login', (req, res) => {
@@ -56,6 +57,7 @@ router.post('/login', (req, res) => {
         if (error) {
           throw error;
         }
+        customizeUser(Email)
         client.query(`SELECT * FROM users WHERE email='${Email}'`, (error, results) => {
           if (error) {
             throw error;
